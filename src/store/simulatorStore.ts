@@ -42,7 +42,7 @@ const initialSignals: SignalData[] = [
   },
 ];
 
-export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
+export const useSimulatorStore = create<SimulatorStore>((set) => ({
   // Initial state
   signals: initialSignals,
   columns: [],

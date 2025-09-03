@@ -132,7 +132,6 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = React.memo(({
     width, 
     height, 
     signals, 
-    columns, 
     currentTime, 
     distortion, 
     signalBuffers, 
@@ -144,7 +143,7 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = React.memo(({
   ]);
 
   // Animation frame hook for smooth rendering
-  const { start, stop, pause, resume } = useAnimationFrame(draw);
+  const { start, stop, pause } = useAnimationFrame(draw);
 
   // Setup canvas and start animation
   useEffect(() => {

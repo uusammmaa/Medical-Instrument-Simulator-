@@ -10,7 +10,6 @@ import { useUIStore } from '@/store/uiStore';
 export const ChartArea: React.FC = () => {
   const [dimensions, setDimensions] = useState({ width: 800, height: 400 });
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   
   const { addColumn, triggerDistortion, clearDistortion } = useSimulatorStore();
   const { selectedTab } = useUIStore();
@@ -33,13 +32,7 @@ export const ChartArea: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [handleResize]);
 
-  const handleMouseDown = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = event.currentTarget;
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    
-    setDragStart({ x, y });
+  const handleMouseDown = useCallback(() => {
     setIsDragging(true);
   }, []);
 
@@ -49,7 +42,6 @@ export const ChartArea: React.FC = () => {
     const canvas = event.currentTarget;
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
     
     // Calculate time position
     const timeScale = dimensions.width / 180; // 3 minutes = 180 seconds
