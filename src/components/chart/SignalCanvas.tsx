@@ -42,7 +42,7 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = React.memo(({
 
   // Create canvas configuration
   const canvasConfig = useMemo(() => 
-    createCanvasConfig(width, height), 
+    createCanvasConfig(width, height, typeof window !== 'undefined' ? window.devicePixelRatio : 1), 
     [width, height]
   );
 

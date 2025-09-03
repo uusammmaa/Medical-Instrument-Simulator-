@@ -13,11 +13,11 @@ export interface CanvasConfig {
 export const createCanvasConfig = (
   width: number,
   height: number,
-  pixelRatio: number = window.devicePixelRatio || 1
+  pixelRatio?: number
 ): CanvasConfig => ({
   width,
   height,
-  pixelRatio,
+  pixelRatio: pixelRatio ?? (typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1),
   gridSize: 20,
   timeScale: width / 180, // 3 minutes = 180 seconds
 });
