@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { SignalCanvas } from './SignalCanvas';
 import { ColumnOverlay } from './ColumnOverlay';
+import { PlaybackControls } from '../toolbar/PlaybackControls';
 import { useSimulatorStore } from '@/store/simulatorStore';
 import { useUIStore } from '@/store/uiStore';
 
@@ -134,6 +135,9 @@ export const ChartArea: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Playback Controls */}
+      <PlaybackControls />
 
       {/* Instructions */}
       <div className="bg-gray-100 border-t border-gray-200 px-4 py-2 text-sm text-gray-600">

@@ -1,7 +1,21 @@
 'use client';
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import { useSimulatorStore } from '@/store/simulatorStore';
+import { useSignalGenerator } from '@/hooks/useSignalGenerator';
+import { useAnimationFrame, usePerformanceMonitor } from '@/hooks/useAnimationFrame';
+import { SignalRenderer } from './SignalRenderer';
+import { 
+  createCanvasConfig, 
+  setupHighDPICanvas, 
+  drawGrid, 
+  drawSignalBackground, 
+  clearCanvas, 
+  drawSignalSeparators,
+  drawWatermark,
+  PerformanceMonitor 
+} from '@/lib/canvasUtils';
+import { PERFORMANCE_CONFIG } from '@/lib/constants';
 
 interface SignalCanvasProps {
   width: number;
@@ -12,7 +26,7 @@ interface SignalCanvasProps {
   onContextMenu?: (event: React.MouseEvent<HTMLCanvasElement>) => void;
 }
 
-export const SignalCanvas: React.FC<SignalCanvasProps> = ({
+export const SignalCanvas: React.FC<SignalCanvasProps> = React.memo(({
   width,
   height,
   onMouseDown,
@@ -21,91 +35,23 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
   onContextMenu,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { signals, columns, currentTime, distortion } = useSimulatorStore();
+  const performanceMonitorRef = useRef<PerformanceMonitor>(new PerformanceMonitor());
+  const { signals, columns, currentTime, distortion, isPlaying, updateCurrentTime } = useSimulatorStore();
+  const { generateSignalBuffer } = useSignalGenerator();
+  const { fps, updateFPS } = usePerformanceMonitor();
 
-  const drawGrid = useCallback((ctx: CanvasRenderingContext2D) => {
-    const gridSize = 20;
-    const timeScale = width / 180; // 3 minutes = 180 seconds
-    
-    ctx.strokeStyle = '#e5e7eb';
-    ctx.lineWidth = 1;
-    
-    // Vertical grid lines (time markers)
-    for (let i = 0; i <= 180; i += 30) {
-      const x = i * timeScale;
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
-      ctx.stroke();
-    }
-    
-    // Horizontal grid lines
-    for (let i = 0; i <= height; i += gridSize) {
-      ctx.beginPath();
-      ctx.moveTo(0, i);
-      ctx.lineTo(width, i);
-      ctx.stroke();
-    }
-    
-    // Time labels
-    ctx.fillStyle = '#6b7280';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'center';
-    for (let i = 0; i <= 180; i += 60) {
-      const x = i * timeScale;
-      const minutes = Math.floor(i / 60);
-      ctx.fillText(`${minutes}:00`, x, 20);
-    }
-  }, [width, height]);
+  // Create canvas configuration
+  const canvasConfig = useMemo(() => 
+    createCanvasConfig(width, height), 
+    [width, height]
+  );
 
-  const drawSignal = useCallback((ctx: CanvasRenderingContext2D, signal: any, index: number) => {
-    if (!signal.visible) return;
-    
-    const signalHeight = height / 4;
-    const yOffset = index * signalHeight;
-    const timeScale = width / 180;
-    const amplitude = signal.amplitude * (signalHeight / 4);
-    const centerY = yOffset + signalHeight / 2;
-    
-    ctx.strokeStyle = signal.color;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    
-    for (let x = 0; x < width; x++) {
-      const time = (x / timeScale) + currentTime;
-      let y = centerY;
-      
-      if (signal.type === 'breathing1' || signal.type === 'breathing2') {
-        y = centerY + Math.sin(time * signal.frequency + signal.phase) * amplitude;
-      } else if (signal.type === 'eda') {
-        y = centerY + Math.sin(time * signal.frequency) * amplitude + 
-            Math.sin(time * signal.frequency * 0.3) * amplitude * 0.5;
-      } else if (signal.type === 'pulse') {
-        y = centerY + Math.sin(time * signal.frequency * 2) * amplitude * 0.8 +
-            Math.sin(time * signal.frequency * 4) * amplitude * 0.3;
-      }
-      
-      // Apply distortion if active
-      if (distortion) {
-        y += (Math.random() - 0.5) * amplitude * 0.5;
-      }
-      
-      if (x === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    }
-    
-    ctx.stroke();
-    
-    // Draw signal label
-    ctx.fillStyle = signal.color;
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillText(signal.type.toUpperCase(), 10, yOffset + 20);
-  }, [width, height, currentTime, distortion]);
+  // Generate signal buffers for performance
+  const signalBuffers = useMemo(() => {
+    return signals.map(signal => generateSignalBuffer(signal, PERFORMANCE_CONFIG.BUFFER_SIZE));
+  }, [signals, generateSignalBuffer]);
 
+  // Draw columns with optimized performance
   const drawColumns = useCallback((ctx: CanvasRenderingContext2D) => {
     const timeScale = width / 180;
     
@@ -125,31 +71,110 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     });
   }, [columns, currentTime, width, height]);
 
-  const draw = useCallback(() => {
+  // Main drawing function with performance optimization
+  const draw = useCallback((deltaTime: number = 0) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
+    // Update current time for animation
+    updateCurrentTime(deltaTime);
+    
+    // Update performance monitoring
+    updateFPS(Date.now());
+    performanceMonitorRef.current.update(Date.now());
+    
     // Clear canvas
-    ctx.clearRect(0, 0, width, height);
+    clearCanvas(ctx, canvasConfig);
+    
+    // Draw signal backgrounds
+    signals.forEach((_, index) => {
+      drawSignalBackground(ctx, canvasConfig, index);
+    });
     
     // Draw grid
-    drawGrid(ctx);
+    drawGrid(ctx, canvasConfig);
+    
+    // Draw signal separators
+    drawSignalSeparators(ctx, canvasConfig);
     
     // Draw columns
     drawColumns(ctx);
     
-    // Draw signals
+    // Draw signals using optimized renderer
     signals.forEach((signal, index) => {
-      drawSignal(ctx, signal, index);
+      const buffer = signalBuffers[index];
+      SignalRenderer({
+        ctx,
+        signal,
+        index,
+        width,
+        height,
+        currentTime,
+        distortion,
+        signalBuffer: buffer,
+      });
     });
-  }, [width, height, signals, columns, currentTime, distortion, drawGrid, drawColumns, drawSignal]);
+    
+    // Draw watermark
+    drawWatermark(ctx, canvasConfig);
+    
+    // Draw performance info in development
+    if (process.env.NODE_ENV === 'development') {
+      ctx.fillStyle = '#666';
+      ctx.font = '10px Arial';
+      ctx.textAlign = 'right';
+      ctx.fillText(`FPS: ${fps}`, width - 10, height - 10);
+    }
+  }, [
+    width, 
+    height, 
+    signals, 
+    columns, 
+    currentTime, 
+    distortion, 
+    signalBuffers, 
+    canvasConfig, 
+    drawColumns, 
+    fps, 
+    updateFPS,
+    updateCurrentTime
+  ]);
 
+  // Animation frame hook for smooth rendering
+  const { start, stop, pause, resume } = useAnimationFrame(draw);
+
+  // Setup canvas and start animation
   useEffect(() => {
-    draw();
-  }, [draw]);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Setup high-DPI canvas
+    setupHighDPICanvas(canvas, canvasConfig);
+
+    // Start animation if playing
+    if (isPlaying) {
+      start();
+    } else {
+      // Still draw once when not playing
+      draw();
+    }
+
+    return () => {
+      stop();
+    };
+  }, [canvasConfig, isPlaying, start, stop, draw]);
+
+  // Handle play/pause state changes
+  useEffect(() => {
+    if (isPlaying) {
+      start();
+    } else {
+      pause();
+    }
+  }, [isPlaying, start, pause]);
 
   return (
     <canvas
@@ -164,4 +189,6 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
       style={{ cursor: 'crosshair' }}
     />
   );
-};
+});
+
+SignalCanvas.displayName = 'SignalCanvas';

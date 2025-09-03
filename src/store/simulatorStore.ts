@@ -88,6 +88,16 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
 
   setPlaybackSpeed: (speed: number) => set({ playbackSpeed: speed }),
   setCurrentTime: (time: number) => set({ currentTime: time }),
+  
+  // Update current time for animation
+  updateCurrentTime: (deltaTime: number) => 
+    set((state) => {
+      if (!state.isPlaying) return state;
+      const newTime = state.currentTime + (deltaTime / 1000) * state.playbackSpeed;
+      return { 
+        currentTime: Math.min(newTime, state.duration) 
+      };
+    }),
 
   // Distortion
   triggerDistortion: () =>
