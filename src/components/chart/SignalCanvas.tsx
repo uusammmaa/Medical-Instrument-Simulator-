@@ -4,7 +4,7 @@ import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import { useSimulatorStore } from '@/store/simulatorStore';
 import { useSignalGenerator } from '@/hooks/useSignalGenerator';
 import { useAnimationFrame, usePerformanceMonitor } from '@/hooks/useAnimationFrame';
-import { SignalRenderer } from './SignalRenderer';
+import { renderSignal } from './SignalRenderer';
 import { 
   createCanvasConfig, 
   setupHighDPICanvas, 
@@ -106,7 +106,7 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = React.memo(({
     // Draw signals using optimized renderer
     signals.forEach((signal, index) => {
       const buffer = signalBuffers[index];
-      SignalRenderer({
+      renderSignal({
         ctx,
         signal,
         index,
