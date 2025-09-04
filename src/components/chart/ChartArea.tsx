@@ -50,22 +50,24 @@ export const ChartArea: React.FC = () => {
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     
-    // Calculate time position
+    // Calculate time position relative to current time
     const timeScale = dimensions.width / 60; // 60 seconds window
-    const timeX = (x / timeScale);
+    const timeOffset = x / timeScale; // Time offset from current time
+    const currentTime = useSimulatorStore.getState().getCurrentTime();
+    const absoluteTime = currentTime - timeOffset; // Absolute time position
     
     // Add column based on click type
     if (event.button === 0) { // Left click - green column
       addColumn({
         type: 'green',
-        x: timeX,
+        x: absoluteTime,
         width: 3, // 3 seconds width
         timestamp: Date.now(),
       });
     } else if (event.button === 2) { // Right click - red column
       addColumn({
         type: 'red',
-        x: timeX,
+        x: absoluteTime,
         width: 3, // 3 seconds width
         timestamp: Date.now(),
       });
