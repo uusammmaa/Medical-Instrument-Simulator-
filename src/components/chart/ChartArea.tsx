@@ -78,6 +78,8 @@ export const ChartArea: React.FC = () => {
 
   const handleContextMenu = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
     event.preventDefault();
+    event.stopPropagation();
+    return false;
   }, []);
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -117,6 +119,7 @@ export const ChartArea: React.FC = () => {
         id="chart-container"
         className="flex-1 relative overflow-hidden"
         style={{ minHeight: '400px' }}
+        onContextMenu={(e) => e.preventDefault()}
       >
         <div className="absolute inset-0 p-4">
           <SignalCanvas

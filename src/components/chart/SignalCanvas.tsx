@@ -179,6 +179,15 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     };
   }, [draw]);
 
+  const handleContextMenu = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (onContextMenu) {
+      onContextMenu(event);
+    }
+    return false;
+  }, [onContextMenu]);
+
   return (
     <canvas
       ref={canvasRef}
@@ -188,7 +197,7 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
       onMouseDown={onMouseDown}
       onMouseUp={onMouseUp}
       onMouseMove={onMouseMove}
-      onContextMenu={onContextMenu}
+      onContextMenu={handleContextMenu}
       style={{ cursor: 'crosshair' }}
     />
   );
