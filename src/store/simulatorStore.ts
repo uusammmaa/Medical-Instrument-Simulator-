@@ -8,8 +8,8 @@ const initialSignals: SignalData[] = [
     id: 'breathing1',
     type: 'breathing1',
     color: '#1e40af', // Dark blue
-    amplitude: 1.0,
-    frequency: 0.25, // 15 cycles per minute
+    amplitude: 2.0,
+    frequency: 2, // 15 cycles per minute
     phase: 0,
     visible: true,
   },
@@ -17,8 +17,8 @@ const initialSignals: SignalData[] = [
     id: 'breathing2',
     type: 'breathing2',
     color: '#1e40af', // Dark blue
-    amplitude: 0.8,
-    frequency: 0.25, // 15 cycles per minute
+    amplitude: 3,
+    frequency: 2, // 15 cycles per minute
     phase: 0.2, // Phase shift
     visible: true,
   },
@@ -26,8 +26,8 @@ const initialSignals: SignalData[] = [
     id: 'eda',
     type: 'eda',
     color: '#16a34a', // Green
-    amplitude: 0.6,
-    frequency: 0.1, // 6 cycles per minute
+    amplitude: 1,
+    frequency: 1, // 6 cycles per minute
     phase: 0,
     visible: true,
   },
