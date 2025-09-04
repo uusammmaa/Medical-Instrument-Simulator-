@@ -7,7 +7,7 @@ A web-based medical instrument simulator that replicates a polygraph/physiologic
 ### What's Been Built
 
 **Project Setup & Basic Structure:**
-- ✅ Next.js 14+ project with TypeScript
+- ✅ Next.js 15.5.2 project with TypeScript
 - ✅ Tailwind CSS for styling
 - ✅ Framer Motion for animations
 - ✅ Zustand for state management
@@ -15,7 +15,7 @@ A web-based medical instrument simulator that replicates a polygraph/physiologic
 
 **React Component Structure:**
 - ✅ Main layout components (Header, Sidebar, MainLayout)
-- ✅ Input panel components with controlled inputs
+- ✅ Sidebar with input panels and controlled inputs
 - ✅ Toolbar components with menu buttons and playback controls
 - ✅ Status bar component with subject information
 
@@ -28,7 +28,7 @@ A web-based medical instrument simulator that replicates a polygraph/physiologic
 
 ### Key Features Implemented
 
-1. **Interactive UI Panels:**
+1. **Interactive UI Panels (in Sidebar):**
    - Numerical scoring table (TR, AR, EDA, BP, PLE)
    - Question input with R1/R2 fields
    - EDA comments textarea
@@ -50,14 +50,18 @@ A web-based medical instrument simulator that replicates a polygraph/physiologic
 
 4. **Real-time Signals:**
    - 4 signal channels (2 breathing, 1 EDA, 1 pulse)
-   - Smooth animation with proper frequencies
+   - Smooth animation with proper frequencies (15 cycles/min for breathing, 72 bpm for pulse)
+   - Real-time signal generation with continuous animation
    - Visual feedback for interactions
+   - Signal distortion effects on spacebar press
 
 5. **Professional UI:**
-   - Medical instrument styling
-   - Responsive design
-   - Smooth animations
-   - Professional color scheme
+   - Medical instrument styling with CPSpro branding
+   - Responsive design with proper grid layout
+   - Smooth animations using Framer Motion
+   - Professional color scheme (medical blues, greens, reds)
+   - Watermark overlay on chart area
+   - Status bar with subject information and playback controls
 
 ### How to Run
 
@@ -79,10 +83,12 @@ A web-based medical instrument simulator that replicates a polygraph/physiologic
 - **Right Click**: Add red column marker  
 - **Spacebar**: Trigger signal distortion effect
 - **Click Columns**: Remove column markers
+- **Tab Navigation**: Switch between different chart views (Arm, Chart 2, etc.)
+- **Playback Controls**: Play, pause, stop, and navigate through the timeline
 
 ### Technical Stack
 
-- **Frontend**: React 18, Next.js 14, TypeScript
+- **Frontend**: React 19, Next.js 15, TypeScript
 - **Styling**: Tailwind CSS
 - **Animations**: Framer Motion
 - **State Management**: Zustand
@@ -94,24 +100,38 @@ A web-based medical instrument simulator that replicates a polygraph/physiologic
 src/
 ├── app/                 # Next.js app directory
 ├── components/          # React components
-│   ├── ui/             # Basic UI components
-│   ├── chart/          # Chart and signal components
-│   ├── panels/         # Input panels
-│   ├── toolbar/        # Menu and controls
-│   └── layout/         # Layout components
-├── hooks/              # Custom React hooks
-├── lib/                # Utility functions
-├── store/              # Zustand stores
+│   ├── ui/             # Basic UI components (Button, Input, Dropdown)
+│   ├── chart/          # Chart and signal components (ChartArea, SignalCanvas, ColumnOverlay)
+│   ├── panels/         # Empty directory (input panels are in Sidebar)
+│   ├── toolbar/        # Menu and controls (MenuBar, StatusBar)
+│   └── layout/         # Layout components (Header, Sidebar, MainLayout)
+├── store/              # Zustand stores (simulatorStore, uiStore, types)
 └── types/              # TypeScript type definitions
 ```
 
-### Next Steps (Phase 2)
+### Current Implementation Details
 
-The foundation is now complete. Phase 2 will focus on:
-- Enhanced signal generation algorithms
-- Real-time animation system
-- Performance optimization
-- Advanced interactive features
+**State Management:**
+- Zustand stores for simulator state and UI state
+- Real-time signal generation with proper timing
+- Column management with add/remove functionality
+- Playback controls with play/pause/stop
+
+**Signal Generation:**
+- 4 distinct signal types with different characteristics
+- Breathing signals: 15 cycles per minute with phase offset
+- EDA signal: Complex waveform with multiple harmonics
+- Pulse signal: 72 BPM with dual-frequency components
+- Real-time distortion effects
+
+**UI Components:**
+- Responsive sidebar with all input panels
+- Canvas-based chart rendering with smooth animations
+- Interactive column overlay with click-to-remove
+- Professional medical instrument styling
+- Tab-based chart navigation
+
+
 
 ### Browser Support
 
