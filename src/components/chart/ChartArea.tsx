@@ -52,7 +52,7 @@ export const ChartArea: React.FC = () => {
     
     // Calculate time position relative to current time
     const timeScale = dimensions.width / 60; // 60 seconds window
-    const timeOffset = x / timeScale; // Time offset from current time
+    const timeOffset = (dimensions.width - x) / timeScale; // Time offset from current time (inverted)
     const currentTime = useSimulatorStore.getState().getCurrentTime();
     const absoluteTime = currentTime - timeOffset; // Absolute time position
     
