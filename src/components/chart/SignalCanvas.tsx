@@ -73,14 +73,16 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     ctx.lineWidth = 2;
     ctx.beginPath();
     
-    // Draw the signal from right to left, showing only the last 60 seconds
+    // Draw the signal from right to left, but only show data from the start of simulation
+    // This creates the effect of signals starting from scratch
     for (let x = 0; x < width; x++) {
       // Calculate the time for this x position (moving from right to left)
       const timeOffset = (width - x) / timeScale; // Time offset from current time
       const time = currentTime - timeOffset;
       
-      // Only draw if the time is within the last 60 seconds
-      if (time >= currentTime - 60) {
+      // Only draw if the time is positive (from start of simulation forward)
+      // and within the current time window
+      if (time >= 0 && time <= currentTime) {
         let y = centerY;
         
         if (signal.type === 'breathing1' || signal.type === 'breathing2') {
