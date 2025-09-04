@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useCallback } from 'react';
 import { useSimulatorStore } from '@/store/simulatorStore';
+import { SignalData } from '@/types';
 
 interface SignalCanvasProps {
   width: number;
@@ -59,7 +60,7 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     }
   }, [width, height]);
 
-  const drawSignal = useCallback((ctx: CanvasRenderingContext2D, signal: any, index: number) => {
+  const drawSignal = useCallback((ctx: CanvasRenderingContext2D, signal: SignalData, index: number) => {
     if (!signal.visible) return;
     
     const signalHeight = height / 4;
@@ -161,7 +162,7 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     signals.forEach((signal, index) => {
       drawSignal(ctx, signal, index);
     });
-  }, [width, height, signals, columns, distortion, drawGrid, drawColumns, drawSignal, updateCurrentTime]);
+  }, [width, height, signals, drawGrid, drawColumns, drawSignal, updateCurrentTime]);
 
   // Animation loop for continuous signal generation
   useEffect(() => {

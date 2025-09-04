@@ -9,7 +9,7 @@ interface ColumnOverlayProps {
   height: number;
 }
 
-export const ColumnOverlay: React.FC<ColumnOverlayProps> = ({ width, height }) => {
+export const ColumnOverlay: React.FC<ColumnOverlayProps> = ({ width }) => {
   const { columns, removeColumn, getCurrentTime } = useSimulatorStore();
 
   const handleColumnClick = (columnId: string) => {
