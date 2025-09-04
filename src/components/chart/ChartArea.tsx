@@ -51,7 +51,7 @@ export const ChartArea: React.FC = () => {
     const y = event.clientY - rect.top;
     
     // Calculate time position
-    const timeScale = dimensions.width / 180; // 3 minutes = 180 seconds
+    const timeScale = dimensions.width / 60; // 60 seconds window
     const timeX = (x / timeScale);
     
     // Add column based on click type

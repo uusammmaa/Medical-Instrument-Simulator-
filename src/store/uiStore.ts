@@ -29,7 +29,7 @@ const initialTotals: TotalsData = {
 };
 
 const initialSubject: SubjectInfo = {
-  name: 'Trent Lund',
+  name: 'Trent',
   scoresheet: '<New>',
   chart: 'Arm, 8/17/2010 11:05:02 AM',
   examiner: 'Shawn',

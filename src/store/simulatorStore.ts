@@ -46,12 +46,13 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
   // Initial state
   signals: initialSignals,
   columns: [],
-  isPlaying: false,
+  isPlaying: true, // Start playing automatically
   currentTime: 0,
-  duration: 180, // 3 minutes
+  duration: 60, // 60 seconds for hospital monitor style
   playbackSpeed: 1.0,
   distortion: false,
   distortionTime: 0,
+  startTime: Date.now(), // Track when simulation started
 
   // Signal management
   updateSignal: (id: string, updates: Partial<SignalData>) =>
@@ -89,6 +90,25 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
   setPlaybackSpeed: (speed: number) => set({ playbackSpeed: speed }),
   setCurrentTime: (time: number) => set({ currentTime: time }),
 
+  // Continuous signal generation
+  updateCurrentTime: () => {
+    const state = get();
+    if (state.isPlaying) {
+      const now = Date.now();
+      const elapsed = (now - state.startTime) / 1000; // Convert to seconds
+      set({ currentTime: elapsed });
+    }
+  },
+
+  getCurrentTime: () => {
+    const state = get();
+    if (state.isPlaying) {
+      const now = Date.now();
+      return (now - state.startTime) / 1000;
+    }
+    return state.currentTime;
+  },
+
   // Distortion
   triggerDistortion: () =>
     set({ distortion: true, distortionTime: Date.now() }),
@@ -99,9 +119,10 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
     set({
       signals: initialSignals,
       columns: [],
-      isPlaying: false,
+      isPlaying: true, // Auto-start on reset
       currentTime: 0,
       distortion: false,
       distortionTime: 0,
+      startTime: Date.now(), // Reset start time
     }),
 }));

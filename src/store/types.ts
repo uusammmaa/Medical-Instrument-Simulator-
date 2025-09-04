@@ -17,6 +17,10 @@ export interface SimulatorStore extends SimulatorState {
   setPlaybackSpeed: (speed: number) => void;
   setCurrentTime: (time: number) => void;
   
+  // Continuous signal generation
+  updateCurrentTime: () => void;
+  getCurrentTime: () => number;
+  
   // Distortion
   triggerDistortion: () => void;
   clearDistortion: () => void;

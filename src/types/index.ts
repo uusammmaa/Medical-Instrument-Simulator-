@@ -25,6 +25,7 @@ export interface SimulatorState {
   playbackSpeed: number;
   distortion: boolean;
   distortionTime: number;
+  startTime: number;
 }
 
 export interface ScoringData {

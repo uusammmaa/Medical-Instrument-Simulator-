@@ -21,17 +21,18 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
   onContextMenu,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { signals, columns, currentTime, distortion } = useSimulatorStore();
+  const animationRef = useRef<number | undefined>(undefined);
+  const { signals, columns, distortion, updateCurrentTime, getCurrentTime } = useSimulatorStore();
 
   const drawGrid = useCallback((ctx: CanvasRenderingContext2D) => {
     const gridSize = 20;
-    const timeScale = width / 180; // 3 minutes = 180 seconds
+    const timeScale = width / 60; // 60 seconds = 1 minute
     
     ctx.strokeStyle = '#e5e7eb';
     ctx.lineWidth = 1;
     
-    // Vertical grid lines (time markers)
-    for (let i = 0; i <= 180; i += 30) {
+    // Vertical grid lines (time markers every 10 seconds)
+    for (let i = 0; i <= 60; i += 10) {
       const x = i * timeScale;
       ctx.beginPath();
       ctx.moveTo(x, 0);
@@ -51,10 +52,10 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     ctx.fillStyle = '#6b7280';
     ctx.font = '12px Arial';
     ctx.textAlign = 'center';
-    for (let i = 0; i <= 180; i += 60) {
+    for (let i = 0; i <= 60; i += 20) {
       const x = i * timeScale;
-      const minutes = Math.floor(i / 60);
-      ctx.fillText(`${minutes}:00`, x, 20);
+      const seconds = i;
+      ctx.fillText(`${seconds}s`, x, 20);
     }
   }, [width, height]);
 
@@ -63,37 +64,45 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     
     const signalHeight = height / 4;
     const yOffset = index * signalHeight;
-    const timeScale = width / 180;
+    const timeScale = width / 60; // 60 seconds window
     const amplitude = signal.amplitude * (signalHeight / 4);
     const centerY = yOffset + signalHeight / 2;
+    const currentTime = getCurrentTime();
     
     ctx.strokeStyle = signal.color;
     ctx.lineWidth = 2;
     ctx.beginPath();
     
+    // Draw the signal from right to left, showing only the last 60 seconds
     for (let x = 0; x < width; x++) {
-      const time = (x / timeScale) + currentTime;
-      let y = centerY;
+      // Calculate the time for this x position (moving from right to left)
+      const timeOffset = (width - x) / timeScale; // Time offset from current time
+      const time = currentTime - timeOffset;
       
-      if (signal.type === 'breathing1' || signal.type === 'breathing2') {
-        y = centerY + Math.sin(time * signal.frequency + signal.phase) * amplitude;
-      } else if (signal.type === 'eda') {
-        y = centerY + Math.sin(time * signal.frequency) * amplitude + 
-            Math.sin(time * signal.frequency * 0.3) * amplitude * 0.5;
-      } else if (signal.type === 'pulse') {
-        y = centerY + Math.sin(time * signal.frequency * 2) * amplitude * 0.8 +
-            Math.sin(time * signal.frequency * 4) * amplitude * 0.3;
-      }
-      
-      // Apply distortion if active
-      if (distortion) {
-        y += (Math.random() - 0.5) * amplitude * 0.5;
-      }
-      
-      if (x === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
+      // Only draw if the time is within the last 60 seconds
+      if (time >= currentTime - 60) {
+        let y = centerY;
+        
+        if (signal.type === 'breathing1' || signal.type === 'breathing2') {
+          y = centerY + Math.sin(time * signal.frequency + signal.phase) * amplitude;
+        } else if (signal.type === 'eda') {
+          y = centerY + Math.sin(time * signal.frequency) * amplitude + 
+              Math.sin(time * signal.frequency * 0.3) * amplitude * 0.5;
+        } else if (signal.type === 'pulse') {
+          y = centerY + Math.sin(time * signal.frequency * 2) * amplitude * 0.8 +
+              Math.sin(time * signal.frequency * 4) * amplitude * 0.3;
+        }
+        
+        // Apply distortion if active
+        if (distortion) {
+          y += (Math.random() - 0.5) * amplitude * 0.5;
+        }
+        
+        if (x === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
       }
     }
     
@@ -104,13 +113,15 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     ctx.font = '12px Arial';
     ctx.textAlign = 'left';
     ctx.fillText(signal.type.toUpperCase(), 10, yOffset + 20);
-  }, [width, height, currentTime, distortion]);
+  }, [width, height, distortion, getCurrentTime]);
 
   const drawColumns = useCallback((ctx: CanvasRenderingContext2D) => {
-    const timeScale = width / 180;
+    const timeScale = width / 60; // 60 seconds window
+    const currentTime = getCurrentTime();
     
     columns.forEach((column) => {
-      const x = (column.x - currentTime) * timeScale;
+      const timeOffset = currentTime - column.x;
+      const x = width - (timeOffset * timeScale);
       const columnWidth = column.width * timeScale;
       
       if (x + columnWidth > 0 && x < width) {
@@ -123,7 +134,7 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
         ctx.strokeRect(x, 0, columnWidth, height);
       }
     });
-  }, [columns, currentTime, width, height]);
+  }, [columns, width, height, getCurrentTime]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -131,6 +142,9 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    
+    // Update current time for continuous animation
+    updateCurrentTime();
     
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
@@ -145,10 +159,22 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     signals.forEach((signal, index) => {
       drawSignal(ctx, signal, index);
     });
-  }, [width, height, signals, columns, currentTime, distortion, drawGrid, drawColumns, drawSignal]);
+  }, [width, height, signals, columns, distortion, drawGrid, drawColumns, drawSignal, updateCurrentTime]);
 
+  // Animation loop for continuous signal generation
   useEffect(() => {
-    draw();
+    const animate = () => {
+      draw();
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    
+    animationRef.current = requestAnimationFrame(animate);
+    
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
   }, [draw]);
 
   return (
