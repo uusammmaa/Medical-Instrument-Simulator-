@@ -141,3 +141,89 @@ src/
 - Edge
 
 Modern browsers with ES6+ support required.
+
+## Deployment
+
+### Production Deployment (Vercel)
+
+The application is currently deployed on Vercel and accessible at:
+- **Production URL**: https://medical-instrument-simulator.vercel.app/
+- **Vercel Dashboard**: https://vercel.com/usamaakram17-gmailcoms-projects/medical-instrument-simulator
+
+### Deployment Configuration
+
+**Project Details:**
+- **Project Name**: medical-instrument-simulator
+- **Organization**: usamaakram17-gmailcoms-projects
+- **Project ID**: prj_mho0DMoV82EugMECOhGVyTrTJNWH
+- **Organization ID**: team_0zdqliqeZI2qSXzN6pGxUiXO
+
+### Deployment Commands
+
+1. **Login to Vercel:**
+   ```bash
+   vercel login
+   ```
+
+2. **Deploy to Production:**
+   ```bash
+   vercel --prod
+   ```
+
+3. **Deploy Preview (Development):**
+   ```bash
+   vercel
+   ```
+
+### Deployment Process
+
+1. **Prerequisites:**
+   - Vercel CLI installed globally: `npm install -g vercel`
+   - Authenticated with Vercel account
+   - Project linked to Vercel (`.vercel` folder present)
+
+2. **Build Configuration:**
+   - Framework: Next.js 15.5.2
+   - Build Command: `next build --turbopack`
+   - Output Directory: `.next`
+   - Install Command: `npm install` (or `pnpm install`)
+
+3. **Environment Variables:**
+   - No environment variables currently required
+   - Add any required environment variables through Vercel dashboard
+
+### Deployment Notes for Future Developers
+
+**Important Files:**
+- `.vercel/project.json` - Contains project configuration
+- `vercel.json` - Custom Vercel configuration (if needed)
+- `next.config.ts` - Next.js configuration
+
+**Deployment Checklist:**
+- [ ] Ensure all dependencies are in `package.json`
+- [ ] Run `npm run build` locally to verify build works
+- [ ] Check for any TypeScript errors: `npm run lint`
+- [ ] Test the application locally: `npm run dev`
+- [ ] Commit all changes to git
+- [ ] Run `vercel --prod` to deploy
+
+**Troubleshooting:**
+- If deployment fails, check the Vercel dashboard for build logs
+- Ensure all environment variables are set in Vercel dashboard
+- Verify that the build command works locally
+- Check for any missing dependencies or TypeScript errors
+
+**Automatic Deployments:**
+- Connect GitHub repository to Vercel for automatic deployments
+- Each push to main branch will trigger a production deployment
+- Pull requests will create preview deployments
+
+**Performance Optimization:**
+- The app uses Next.js 15 with Turbopack for faster builds
+- Static assets are automatically optimized by Vercel
+- Consider implementing ISR (Incremental Static Regeneration) for better performance
+
+**Monitoring:**
+- Use Vercel Analytics for performance monitoring
+- Check Vercel dashboard for deployment status and logs
+- Monitor Core Web Vitals through Vercel's built-in analytics
