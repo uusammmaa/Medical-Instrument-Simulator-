@@ -110,7 +110,7 @@ export const ChartArea: React.FC = () => {
       <div
         id="chart-container"
         className="flex-1 relative overflow-hidden"
-        style={{ minHeight: '400px' }}
+        style={{ minHeight: '68vh' }}
         onContextMenu={(e) => e.preventDefault()}
       >
         <div className="absolute inset-0 p-4">
