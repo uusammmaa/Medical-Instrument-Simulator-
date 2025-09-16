@@ -4,13 +4,22 @@ A web-based medical instrument simulator that replicates a polygraph/physiologic
 
 ## Phase 1 Implementation Complete ✅
 
+### Current Development Status
+
+- Recent updates include advanced signal distortion effects
+- Improved signal rendering with 60-second rolling buffer
+- Enhanced real-time distortion with hold-to-activate functionality
+- Refactored signal types for better clarity and consistency
+- Updated signal IDs: `breathing1`, `breathing2`, `eda`, `pulse` (replacing old `bvp`, `gsr`, `resp`, `resp2`, `pleth`)
+
 ### What's Been Built
 
 **Project Setup & Basic Structure:**
 - ✅ Next.js 15.5.2 project with TypeScript
-- ✅ Tailwind CSS for styling
+- ✅ Tailwind CSS v4 for styling
 - ✅ Framer Motion for animations
 - ✅ Zustand for state management
+- ✅ UUID for unique ID generation
 - ✅ Proper project structure with organized folders
 
 **React Component Structure:**
@@ -45,8 +54,9 @@ A web-based medical instrument simulator that replicates a polygraph/physiologic
 3. **Interactive Features:**
    - Left-click to add green columns
    - Right-click to add red columns
-   - Spacebar for signal distortion
+   - Hold Spacebar for real-time signal distortion
    - Column removal by clicking
+   - Real-time distortion indicator with visual feedback
 
 4. **Real-time Signals:**
    - 4 signal channels (2 breathing, 1 EDA, 1 pulse)
@@ -54,6 +64,8 @@ A web-based medical instrument simulator that replicates a polygraph/physiologic
    - Real-time signal generation with continuous animation
    - Visual feedback for interactions
    - Signal distortion effects on spacebar press
+   - Rolling 60-second buffer window for optimal performance
+   - Advanced signal generation with randomization seeds and drift
 
 5. **Professional UI:**
    - Medical instrument styling with CPSpro branding
@@ -81,7 +93,7 @@ A web-based medical instrument simulator that replicates a polygraph/physiologic
 
 - **Left Click**: Add green column marker
 - **Right Click**: Add red column marker  
-- **Spacebar**: Trigger signal distortion effect
+- **Hold Spacebar**: Real-time signal distortion (higher heart rate, intense breathing)
 - **Click Columns**: Remove column markers
 - **Tab Navigation**: Switch between different chart views (Arm, Chart 2, etc.)
 - **Playback Controls**: Play, pause, stop, and navigate through the timeline
@@ -89,10 +101,11 @@ A web-based medical instrument simulator that replicates a polygraph/physiologic
 ### Technical Stack
 
 - **Frontend**: React 19, Next.js 15, TypeScript
-- **Styling**: Tailwind CSS
+- **Styling**: Tailwind CSS v4
 - **Animations**: Framer Motion
 - **State Management**: Zustand
 - **Canvas**: HTML5 Canvas for signal rendering
+- **Utilities**: UUID for unique ID generation
 
 ### Project Structure
 
@@ -102,7 +115,7 @@ src/
 ├── components/          # React components
 │   ├── ui/             # Basic UI components (Button, Input, Dropdown)
 │   ├── chart/          # Chart and signal components (ChartArea, SignalCanvas, ColumnOverlay)
-│   ├── panels/         # Empty directory (input panels are in Sidebar)
+│   ├── panels/         # Empty directory (input panels integrated in Sidebar)
 │   ├── toolbar/        # Menu and controls (MenuBar, StatusBar)
 │   └── layout/         # Layout components (Header, Sidebar, MainLayout)
 ├── store/              # Zustand stores (simulatorStore, uiStore, types)
@@ -122,7 +135,9 @@ src/
 - Breathing signals: 15 cycles per minute with phase offset
 - EDA signal: Complex waveform with multiple harmonics
 - Pulse signal: 72 BPM with dual-frequency components
-- Real-time distortion effects
+- Real-time distortion effects with hold-to-activate
+- Rolling 60-second buffer window for performance optimization
+- Advanced randomization with stable seeds and parameter drift
 
 **UI Components:**
 - Responsive sidebar with all input panels
@@ -130,6 +145,26 @@ src/
 - Interactive column overlay with click-to-remove
 - Professional medical instrument styling
 - Tab-based chart navigation
+
+### Advanced Features
+
+**Performance Optimization:**
+- Rolling 60-second buffer window for memory efficiency
+- Optimized canvas rendering with React.memo
+- Efficient signal data management with append-only buffers
+- Real-time buffer trimming to prevent memory leaks
+
+**Signal Distortion System:**
+- Hold spacebar for real-time signal distortion
+- Visual distortion indicator with animated feedback
+- Physiological changes: higher heart rate, intense breathing patterns
+- Smooth transition between normal and distorted states
+
+**Enhanced Signal Generation:**
+- Stable randomization seeds for consistent behavior
+- Parameter drift for natural signal variation
+- Advanced mathematical models for each signal type
+- Real-time frequency and amplitude adjustments
 
 
 
@@ -187,6 +222,7 @@ The application is currently deployed on Vercel and accessible at:
    - Build Command: `next build --turbopack`
    - Output Directory: `.next`
    - Install Command: `npm install` (or `pnpm install`)
+   - Package Manager: npm (with pnpm lock file available)
 
 3. **Environment Variables:**
    - No environment variables currently required
@@ -217,6 +253,11 @@ The application is currently deployed on Vercel and accessible at:
 - Connect GitHub repository to Vercel for automatic deployments
 - Each push to main branch will trigger a production deployment
 - Pull requests will create preview deployments
+
+**Current Development Workflow:**
+- Active development on `distortion-start-right` branch
+- Recent focus on signal distortion and performance optimization
+- Ready for merge to main branch after testing
 
 **Performance Optimization:**
 - The app uses Next.js 15 with Turbopack for faster builds
