@@ -23,7 +23,7 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
-  const { signals, columns, distortion, updateCurrentTime, getCurrentTime } = useSimulatorStore();
+  const { signals, columns, distortion, distortionTime, updateCurrentTime, getCurrentTime } = useSimulatorStore();
 
   const drawGrid = useCallback((ctx: CanvasRenderingContext2D) => {
     const gridSize = 20;
@@ -70,7 +70,15 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     const centerY = yOffset + signalHeight / 2;
     const currentTime = getCurrentTime();
     
-    ctx.strokeStyle = signal.color;
+    // Set stroke style based on distortion
+    const distortionStartTime = distortionTime / 1000;
+    const isCurrentlyDistorting = distortion && currentTime >= distortionStartTime;
+    
+    if (isCurrentlyDistorting) {
+      ctx.strokeStyle = '#ff0000'; // Red color for distorted signals
+    } else {
+      ctx.strokeStyle = signal.color;
+    }
     ctx.lineWidth = 2;
     ctx.beginPath();
     
@@ -85,20 +93,51 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
       // and within the current time window
       if (time >= 0 && time <= currentTime) {
         let y = centerY;
+        let currentAmplitude = amplitude;
+        let currentFrequency = signal.frequency;
         
-        if (signal.type === 'breathing1' || signal.type === 'breathing2') {
-          y = centerY + Math.sin(time * signal.frequency + signal.phase) * amplitude;
-        } else if (signal.type === 'eda') {
-          y = centerY + Math.sin(time * signal.frequency) * amplitude + 
-              Math.sin(time * signal.frequency * 0.3) * amplitude * 0.5;
-        } else if (signal.type === 'pulse') {
-          y = centerY + Math.sin(time * signal.frequency * 2) * amplitude * 0.8 +
-              Math.sin(time * signal.frequency * 4) * amplitude * 0.3;
-        }
+        // Check if this signal point should be distorted (affects all signals when distortion is active)
+        const shouldDistort = distortion;
         
-        // Apply distortion if active
-        if (distortion) {
-          y += (Math.random() - 0.5) * amplitude * 0.5;
+        
+        
+        // Apply physiological distortion effects to all signals when distortion is active
+        if (shouldDistort) {
+          if (signal.type === 'breathing1' || signal.type === 'breathing2') {
+            // More intense breathing - increase amplitude and frequency significantly
+            currentAmplitude = amplitude * 2.5; // Much more dramatic
+            currentFrequency = signal.frequency * 1.8; // Faster breathing
+            // Add some irregularity to breathing pattern
+            y = centerY + Math.sin(time * currentFrequency + signal.phase) * currentAmplitude +
+                Math.sin(time * currentFrequency * 0.5) * currentAmplitude * 0.5 +
+                Math.sin(time * currentFrequency * 0.2) * currentAmplitude * 0.3;
+          } else if (signal.type === 'eda') {
+            // Stronger skin response - increase amplitude significantly
+            currentAmplitude = amplitude * 3.0; // Much more dramatic
+            y = centerY + Math.sin(time * currentFrequency) * currentAmplitude + 
+                Math.sin(time * currentFrequency * 0.3) * currentAmplitude * 0.8 +
+                Math.sin(time * currentFrequency * 0.1) * currentAmplitude * 0.6 +
+                Math.sin(time * currentFrequency * 0.05) * currentAmplitude * 0.4;
+          } else if (signal.type === 'pulse') {
+            // Higher heart rate - increase frequency and add more complex pattern
+            currentFrequency = signal.frequency * 2.2; // Much faster heart rate
+            currentAmplitude = amplitude * 2.0; // Much more dramatic
+            y = centerY + Math.sin(time * currentFrequency * 2) * currentAmplitude * 1.0 +
+                Math.sin(time * currentFrequency * 4) * currentAmplitude * 0.6 +
+                Math.sin(time * currentFrequency * 8) * currentAmplitude * 0.4 +
+                Math.sin(time * currentFrequency * 16) * currentAmplitude * 0.2;
+          }
+        } else {
+          // Normal signal generation
+          if (signal.type === 'breathing1' || signal.type === 'breathing2') {
+            y = centerY + Math.sin(time * signal.frequency + signal.phase) * amplitude;
+          } else if (signal.type === 'eda') {
+            y = centerY + Math.sin(time * signal.frequency) * amplitude + 
+                Math.sin(time * signal.frequency * 0.3) * amplitude * 0.5;
+          } else if (signal.type === 'pulse') {
+            y = centerY + Math.sin(time * signal.frequency * 2) * amplitude * 0.8 +
+                Math.sin(time * signal.frequency * 4) * amplitude * 0.3;
+          }
         }
         
         if (x === 0) {
@@ -111,12 +150,21 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     
     ctx.stroke();
     
-    // Draw signal label
+    // Draw signal label with distortion indicator
     ctx.fillStyle = signal.color;
     ctx.font = '12px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText(signal.type.toUpperCase(), 10, yOffset + 20);
-  }, [width, height, distortion, getCurrentTime]);
+    let labelText = signal.type.toUpperCase();
+    
+    // Check if distortion is currently active
+    const isCurrentlyDistortingLabel = distortion;
+    
+    if (isCurrentlyDistortingLabel) {
+      labelText += ' (DISTORTED)';
+      ctx.fillStyle = '#ff6b6b'; // Red color for distorted state
+    }
+    ctx.fillText(labelText, 10, yOffset + 20);
+  }, [width, height, distortion, distortionTime, getCurrentTime]);
 
   const drawColumns = useCallback((ctx: CanvasRenderingContext2D) => {
     const timeScale = width / 60; // 60 seconds window
@@ -162,7 +210,7 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     signals.forEach((signal, index) => {
       drawSignal(ctx, signal, index);
     });
-  }, [width, height, signals, drawGrid, drawColumns, drawSignal, updateCurrentTime]);
+  }, [width, height, signals, drawGrid, drawColumns, drawSignal, updateCurrentTime, distortion, distortionTime]);
 
   // Animation loop for continuous signal generation
   useEffect(() => {

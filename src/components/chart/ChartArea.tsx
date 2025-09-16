@@ -10,8 +10,9 @@ export const ChartArea: React.FC = () => {
   const [dimensions, setDimensions] = useState({ width: 800, height: 400 });
   const [isDragging, setIsDragging] = useState(false);
   
-  const { addColumn, triggerDistortion, clearDistortion } = useSimulatorStore();
+  const { addColumn, triggerDistortion, clearDistortion, distortion, distortionTime } = useSimulatorStore();
   const { selectedTab } = useUIStore();
+  
 
   const tabs = ['Arm', 'Chart 2', 'Finger Cuff Detrend Example', 'Finger Part II', 'Finger Part III', 'Chart 6'];
 
@@ -78,14 +79,24 @@ export const ChartArea: React.FC = () => {
     if (event.code === 'Space') {
       event.preventDefault();
       triggerDistortion();
-      setTimeout(() => clearDistortion(), 1000);
     }
-  }, [triggerDistortion, clearDistortion]);
+  }, [triggerDistortion]);
+
+  const handleKeyUp = useCallback((event: KeyboardEvent) => {
+    if (event.code === 'Space') {
+      event.preventDefault();
+      clearDistortion();
+    }
+  }, [clearDistortion]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
+    document.addEventListener('keyup', handleKeyUp);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [handleKeyDown, handleKeyUp]);
 
   return (
     <div className="flex-1 flex flex-col bg-white">
@@ -130,6 +141,20 @@ export const ChartArea: React.FC = () => {
             CPSpro
           </div>
         </div>
+        
+        {/* Distortion Indicator */}
+        {distortion && (
+          <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-white rounded-full animate-ping"></div>
+              <span className="font-semibold">DISTORTING NEW SIGNALS</span>
+            </div>
+          </div>
+        )}
+        
+        
+        
+        
       </div>
 
       {/* Instructions */}
@@ -137,7 +162,7 @@ export const ChartArea: React.FC = () => {
         <div className="flex items-center space-x-6">
           <span>Left-click: Add green column</span>
           <span>Right-click: Add red column</span>
-          <span>Spacebar: Trigger signal distortion</span>
+          <span>Hold Spacebar: Distort new signals (higher heart rate, intense breathing)</span>
         </div>
       </div>
     </div>

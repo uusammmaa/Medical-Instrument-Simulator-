@@ -110,9 +110,13 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
   },
 
   // Distortion
-  triggerDistortion: () =>
-    set({ distortion: true, distortionTime: Date.now() }),
-  clearDistortion: () => set({ distortion: false, distortionTime: 0 }),
+  triggerDistortion: () => {
+    const now = Date.now();
+    set({ distortion: true, distortionTime: now });
+  },
+  clearDistortion: () => {
+    set({ distortion: false, distortionTime: 0 });
+  },
 
   // Reset
   reset: () =>
