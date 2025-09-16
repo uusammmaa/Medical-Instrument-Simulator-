@@ -1,4 +1,4 @@
-import { SignalData, Column, SimulatorState, ScoringData, QuestionData, CommentsData, RatiosData, TotalsData, SubjectInfo } from '@/types';
+import { SignalData, Column, SimulatorState, ScoringData, QuestionData, CommentsData, RatiosData, TotalsData, SubjectInfo, SignalId, Sample } from '@/types';
 
 export interface SimulatorStore extends SimulatorState {
   // Signal management
@@ -24,6 +24,12 @@ export interface SimulatorStore extends SimulatorState {
   // Distortion
   triggerDistortion: () => void;
   clearDistortion: () => void;
+  pressSpace: () => void;
+  releaseSpace: () => void;
+  
+  // Buffer management
+  pushSample: (id: SignalId, s: Sample) => void;
+  trimBuffers: (windowMs: number) => void;
   
   // Reset
   reset: () => void;

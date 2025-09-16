@@ -10,7 +10,7 @@ export const ChartArea: React.FC = () => {
   const [dimensions, setDimensions] = useState({ width: 800, height: 400 });
   const [isDragging, setIsDragging] = useState(false);
   
-  const { addColumn, triggerDistortion, clearDistortion, distortion, distortionTime } = useSimulatorStore();
+  const { addColumn, pressSpace, releaseSpace, distortionActive } = useSimulatorStore();
   const { selectedTab } = useUIStore();
   
 
@@ -78,16 +78,16 @@ export const ChartArea: React.FC = () => {
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.code === 'Space') {
       event.preventDefault();
-      triggerDistortion();
+      pressSpace();
     }
-  }, [triggerDistortion]);
+  }, [pressSpace]);
 
   const handleKeyUp = useCallback((event: KeyboardEvent) => {
     if (event.code === 'Space') {
       event.preventDefault();
-      clearDistortion();
+      releaseSpace();
     }
-  }, [clearDistortion]);
+  }, [releaseSpace]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
@@ -143,7 +143,7 @@ export const ChartArea: React.FC = () => {
         </div>
         
         {/* Distortion Indicator */}
-        {distortion && (
+        {distortionActive && (
           <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-white rounded-full animate-ping"></div>

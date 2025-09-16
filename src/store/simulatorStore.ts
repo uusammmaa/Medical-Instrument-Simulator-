@@ -1,45 +1,16 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { SimulatorStore } from './types';
-import { SignalData, Column } from '@/types';
+import { SignalData, Column, SignalId } from '@/types';
+
+const now = () => performance.now();
 
 const initialSignals: SignalData[] = [
-  {
-    id: 'breathing1',
-    type: 'breathing1',
-    color: '#1e40af', // Dark blue
-    amplitude: 1.8,
-    frequency: 2, // 15 cycles per minute
-    phase: 0,
-    visible: true,
-  },
-  {
-    id: 'breathing2',
-    type: 'breathing2',
-    color: '#1e40af', // Dark blue
-    amplitude: 2,
-    frequency: 2, // 15 cycles per minute
-    phase: 0.2, // Phase shift
-    visible: true,
-  },
-  {
-    id: 'eda',
-    type: 'eda',
-    color: '#16a34a', // Green
-    amplitude: 1,
-    frequency: 1, // 6 cycles per minute
-    phase: 0,
-    visible: true,
-  },
-  {
-    id: 'pulse',
-    type: 'pulse',
-    color: '#dc2626', // Red
-    amplitude: 0.4,
-    frequency: 1.2, // 72 bpm
-    phase: 0,
-    visible: true,
-  },
+  { id: 'bvp', type: 'bvp', color: '#d9534f', amplitude: 1.0, frequency: 2.2, phase: 0, visible: true, seed: 1337, driftSpeed: 0.015 },
+  { id: 'gsr', type: 'gsr', color: '#5cb85c', amplitude: 0.8, frequency: 0.12, phase: 0, visible: true, seed: 4242, driftSpeed: 0.01 },
+  { id: 'resp', type: 'resp', color: '#337ab7', amplitude: 0.9, frequency: 0.28, phase: 0, visible: true, seed: 7777, driftSpeed: 0.012 },
+  { id: 'resp2', type: 'resp2', color: '#3cb3c7', amplitude: 0.75, frequency: 0.3, phase: 0, visible: true, seed: 8888, driftSpeed: 0.013 },
+  { id: 'pleth', type: 'pleth', color: '#999', amplitude: 0.6, frequency: 1.8, phase: 0, visible: true, seed: 2222, driftSpeed: 0.02 },
 ];
 
 export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
@@ -52,7 +23,14 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
   playbackSpeed: 1.0,
   distortion: false,
   distortionTime: 0,
-  startTime: Date.now(), // Track when simulation started
+  startTime: now(), // Track when simulation started
+  distortionActive: false,
+  distortionStartedAt: null,
+
+  // append-only buffers (rolling window)
+  buffers: {
+    bvp: [], gsr: [], resp: [], resp2: [], pleth: [],
+  },
 
   // Signal management
   updateSignal: (id: string, updates: Partial<SignalData>) =>
@@ -83,9 +61,16 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
   clearColumns: () => set({ columns: [] }),
 
   // Playback controls
-  play: () => set({ isPlaying: true }),
+  play: () => set({ isPlaying: true, startTime: now() }),
   pause: () => set({ isPlaying: false }),
-  stop: () => set({ isPlaying: false, currentTime: 0 }),
+  stop: () => set({
+    isPlaying: false,
+    currentTime: 0,
+    distortionActive: false,
+    distortionStartedAt: null,
+    buffers: { bvp: [], gsr: [], resp: [], resp2: [], pleth: [] },
+    startTime: now(),
+  }),
 
   setPlaybackSpeed: (speed: number) => set({ playbackSpeed: speed }),
   setCurrentTime: (time: number) => set({ currentTime: time }),
@@ -94,7 +79,7 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
   updateCurrentTime: () => {
     const state = get();
     if (state.isPlaying) {
-      const now = Date.now();
+      const now = performance.now();
       const elapsed = (now - state.startTime) / 1000; // Convert to seconds
       set({ currentTime: elapsed });
     }
@@ -103,7 +88,7 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
   getCurrentTime: () => {
     const state = get();
     if (state.isPlaying) {
-      const now = Date.now();
+      const now = performance.now();
       return (now - state.startTime) / 1000;
     }
     return state.currentTime;
@@ -111,12 +96,35 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
 
   // Distortion
   triggerDistortion: () => {
-    const now = Date.now();
+    const now = performance.now();
     set({ distortion: true, distortionTime: now });
   },
   clearDistortion: () => {
     set({ distortion: false, distortionTime: 0 });
   },
+
+  // New distortion methods for Spacebar
+  pressSpace: () => set({ distortionActive: true, distortionStartedAt: now() }),
+  releaseSpace: () => set({ distortionActive: false }),
+
+  // Buffer management
+  pushSample: (id, s) => set(state => {
+    const next = { ...state.buffers };
+    (next[id] ??= []).push(s);
+    return { buffers: next };
+  }),
+
+  trimBuffers: (windowMs) => set(state => {
+    const cutoff = now() - windowMs;
+    const next: SimulatorStore['buffers'] = { bvp: [], gsr: [], resp: [], resp2: [], pleth: [] };
+    (Object.keys(state.buffers) as SignalId[]).forEach(id => {
+      const arr = state.buffers[id];
+      let i = 0;
+      while (i < arr.length && arr[i].t < cutoff) i++;
+      next[id] = i > 0 ? arr.slice(i) : arr;
+    });
+    return { buffers: next };
+  }),
 
   // Reset
   reset: () =>
@@ -127,6 +135,9 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
       currentTime: 0,
       distortion: false,
       distortionTime: 0,
-      startTime: Date.now(), // Reset start time
+      distortionActive: false,
+      distortionStartedAt: null,
+      buffers: { bvp: [], gsr: [], resp: [], resp2: [], pleth: [] },
+      startTime: now(), // Reset start time
     }),
 }));
