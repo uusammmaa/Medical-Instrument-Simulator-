@@ -1,11 +1,17 @@
+export type SignalId = 'bvp' | 'gsr' | 'resp' | 'resp2' | 'pleth';
+export type SignalType = SignalId;
+
 export interface SignalData {
-  id: string;
-  type: 'breathing1' | 'breathing2' | 'eda' | 'pulse';
+  id: SignalId;
+  type: SignalType;
   color: string;
   amplitude: number;
   frequency: number;
   phase: number;
   visible: boolean;
+  // randomization seeds (stable per run)
+  seed: number;
+  driftSpeed: number; // very slow parameter drift (Hz)
 }
 
 export interface Column {
@@ -15,6 +21,8 @@ export interface Column {
   width: number;
   timestamp: number;
 }
+
+export type Sample = { t: number; y: number };
 
 export interface SimulatorState {
   signals: SignalData[];
@@ -26,6 +34,11 @@ export interface SimulatorState {
   distortion: boolean;
   distortionTime: number;
   startTime: number;
+  // New properties for real-time distortion
+  distortionActive: boolean;
+  distortionStartedAt: number | null;
+  // append-only buffers (rolling window)
+  buffers: Record<SignalId, Sample[]>;
 }
 
 export interface ScoringData {
