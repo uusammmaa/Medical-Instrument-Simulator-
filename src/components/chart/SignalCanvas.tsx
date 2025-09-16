@@ -45,26 +45,22 @@ function generateSample(sig: SignalData, tMs: number, distortionActive: boolean,
   const E = easeOutCubic(Math.min(1, elapsed / 0.25)); // 250ms ramp
 
   switch (sig.type) {
-    case 'bvp': {
+    case 'pulse': {
       const ampLift = 1.8;
       const hf = 0.02 * Math.sin(2 * Math.PI * 20 * t); // shimmer
       return base * (1 + E * (ampLift - 1)) + hf * sig.amplitude;
     }
-    case 'gsr': {
+    case 'eda': {
       const tonicRise = 1.2 * E * sig.amplitude;
       const slower = Math.sin(2 * Math.PI * (sig.frequency * 0.6) * t) * sig.amplitude;
       return slower + tonicRise + smallJitter;
     }
-    case 'resp':
-    case 'resp2': {
+    case 'breathing1':
+    case 'breathing2': {
       const ampDrop = 0.55;
       const freqBump = 1.25;
       return Math.sin(2 * Math.PI * (sig.frequency * freqBump) * t + sig.phase)
              * (sig.amplitude * (1 - E * (1 - ampDrop)));
-    }
-    case 'pleth': {
-      const overshoot = 0.3 * Math.exp(-4 * elapsed) * sig.amplitude;
-      return base * (1 + 0.6 * E) + overshoot;
     }
     default:
       return base * (1 + 0.5 * E);

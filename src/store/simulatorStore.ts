@@ -6,11 +6,10 @@ import { SignalData, Column, SignalId } from '@/types';
 const now = () => performance.now();
 
 const initialSignals: SignalData[] = [
-  { id: 'bvp', type: 'bvp', color: '#d9534f', amplitude: 1.0, frequency: 2.2, phase: 0, visible: true, seed: 1337, driftSpeed: 0.015 },
-  { id: 'gsr', type: 'gsr', color: '#5cb85c', amplitude: 0.8, frequency: 0.12, phase: 0, visible: true, seed: 4242, driftSpeed: 0.01 },
-  { id: 'resp', type: 'resp', color: '#337ab7', amplitude: 0.9, frequency: 0.28, phase: 0, visible: true, seed: 7777, driftSpeed: 0.012 },
-  { id: 'resp2', type: 'resp2', color: '#3cb3c7', amplitude: 0.75, frequency: 0.3, phase: 0, visible: true, seed: 8888, driftSpeed: 0.013 },
-  { id: 'pleth', type: 'pleth', color: '#999', amplitude: 0.6, frequency: 1.8, phase: 0, visible: true, seed: 2222, driftSpeed: 0.02 },
+  { id: 'breathing1', type: 'breathing1', color: '#1e3a8a', amplitude: 0.9, frequency: 0.28, phase: 0, visible: true, seed: 7777, driftSpeed: 0.012 },
+  { id: 'breathing2', type: 'breathing2', color: '#1e40af', amplitude: 0.75, frequency: 0.3, phase: 0, visible: true, seed: 8888, driftSpeed: 0.013 },
+  { id: 'eda', type: 'eda', color: '#16a34a', amplitude: 0.8, frequency: 0.12, phase: 0, visible: true, seed: 4242, driftSpeed: 0.01 },
+  { id: 'pulse', type: 'pulse', color: '#dc2626', amplitude: 1.0, frequency: 2.2, phase: 0, visible: true, seed: 1337, driftSpeed: 0.015 },
 ];
 
 export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
@@ -29,7 +28,7 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
 
   // append-only buffers (rolling window)
   buffers: {
-    bvp: [], gsr: [], resp: [], resp2: [], pleth: [],
+    breathing1: [], breathing2: [], eda: [], pulse: [],
   },
 
   // Signal management
@@ -68,7 +67,7 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
     currentTime: 0,
     distortionActive: false,
     distortionStartedAt: null,
-    buffers: { bvp: [], gsr: [], resp: [], resp2: [], pleth: [] },
+    buffers: { breathing1: [], breathing2: [], eda: [], pulse: [] },
     startTime: now(),
   }),
 
@@ -116,7 +115,7 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
 
   trimBuffers: (windowMs) => set(state => {
     const cutoff = now() - windowMs;
-    const next: SimulatorStore['buffers'] = { bvp: [], gsr: [], resp: [], resp2: [], pleth: [] };
+    const next: SimulatorStore['buffers'] = { breathing1: [], breathing2: [], eda: [], pulse: [] };
     (Object.keys(state.buffers) as SignalId[]).forEach(id => {
       const arr = state.buffers[id];
       let i = 0;
@@ -137,7 +136,7 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
       distortionTime: 0,
       distortionActive: false,
       distortionStartedAt: null,
-      buffers: { bvp: [], gsr: [], resp: [], resp2: [], pleth: [] },
+      buffers: { breathing1: [], breathing2: [], eda: [], pulse: [] },
       startTime: now(), // Reset start time
     }),
 }));

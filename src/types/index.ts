@@ -1,4 +1,4 @@
-export type SignalId = 'bvp' | 'gsr' | 'resp' | 'resp2' | 'pleth';
+export type SignalId = 'breathing1' | 'breathing2' | 'eda' | 'pulse';
 export type SignalType = SignalId;
 
 export interface SignalData {
