@@ -104,7 +104,7 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
 
   const drawGrid = useCallback((ctx: CanvasRenderingContext2D) => {
     const gridSize = 20;
-    const timeScale = width / 60; // 60 seconds = 1 minute
+    const timeScale = width / 60; // 60 seconds window
     
     ctx.strokeStyle = '#e5e7eb';
     ctx.lineWidth = 1;
@@ -126,13 +126,13 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
       ctx.stroke();
     }
     
-    // Time labels
+    // Time labels - show relative time (60s, 50s, 40s, etc.)
     ctx.fillStyle = '#6b7280';
     ctx.font = '12px Arial';
     ctx.textAlign = 'center';
     for (let i = 0; i <= 60; i += 20) {
       const x = i * timeScale;
-      const seconds = i;
+      const seconds = 60 - i; // Countdown from 60 to 0
       ctx.fillText(`${seconds}s`, x, 20);
     }
   }, [width, height]);
@@ -142,18 +142,23 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     const currentTime = getCurrentTime();
     
     columns.forEach((column) => {
+      // Calculate time offset from current time (in seconds)
       const timeOffset = currentTime - column.x;
-      const x = width - (timeOffset * timeScale);
-      const columnWidth = column.width * timeScale;
       
-      if (x + columnWidth > 0 && x < width) {
-        ctx.fillStyle = column.type === 'green' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)';
-        ctx.fillRect(x, 0, columnWidth, height);
+      // Only show columns within the 60-second window
+      if (timeOffset >= 0 && timeOffset <= 60) {
+        const x = width - (timeOffset * timeScale);
+        const columnWidth = column.width * timeScale;
         
-        // Column border
-        ctx.strokeStyle = column.type === 'green' ? '#22c55e' : '#ef4444';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x, 0, columnWidth, height);
+        if (x + columnWidth > 0 && x < width) {
+          ctx.fillStyle = column.type === 'green' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)';
+          ctx.fillRect(x, 0, columnWidth, height);
+          
+          // Column border
+          ctx.strokeStyle = column.type === 'green' ? '#22c55e' : '#ef4444';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x, 0, columnWidth, height);
+        }
       }
     });
   }, [columns, width, height, getCurrentTime]);
@@ -184,14 +189,14 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
         const y = generateSample(sig, t, distortionActive, distortionStartedAt);
         pushSample(sig.id, { t, y });
       });
-      // keep last 2 minutes
-      trimBuffers(120_000);
+      // keep last 60 seconds
+      trimBuffers(60_000);
     }
 
-    // Draw signals from buffers
-    const all = Object.values(buffers).flat();
-    const minT = all.length ? Math.min(...all.map(s => s.t)) : performance.now() - 10_000;
-    const maxT = all.length ? Math.max(...all.map(s => s.t)) : performance.now();
+    // Draw signals from buffers - only last 60 seconds
+    const currentTime = getCurrentTime();
+    const windowStart = currentTime - 60; // 60 seconds ago
+    const windowEnd = currentTime;
     const rows = signals.length;
 
     signals.forEach((sig, row) => {
@@ -199,10 +204,20 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
       const arr = buffers[sig.id] ?? [];
       if (arr.length < 2) return;
 
+      // Filter samples to only show last 60 seconds
+      const windowedSamples = arr.filter(sample => 
+        sample.t >= (performance.now() - 60000) && sample.t <= performance.now()
+      );
+      
+      if (windowedSamples.length < 2) return;
+
       ctx.beginPath();
-      for (let i = 0; i < arr.length; i++) {
-        const x = timeToX(arr[i].t, minT, maxT, width);
-        const y = valueToY(arr[i].y, height, row, rows);
+      for (let i = 0; i < windowedSamples.length; i++) {
+        // Calculate x position: right-to-left scrolling
+        // Most recent data (right edge) to oldest data (left edge)
+        const timeFromNow = (performance.now() - windowedSamples[i].t) / 1000; // seconds ago
+        const x = width - (timeFromNow * (width / 60)); // 60 seconds = full width
+        const y = valueToY(windowedSamples[i].y, height, row, rows);
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       }
       ctx.lineWidth = 1.5;
