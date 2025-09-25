@@ -28,16 +28,24 @@ const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
 function generateSample(sig: SignalData, tMs: number, distortionActive: boolean, distortionStartedAt: number | null) {
   const t = tMs / 1000;
 
-  // per-signal deterministic RNG based on time bucket + seed
-  const rng = mulberry32(Math.floor(t * 60) + sig.seed); // new bucket ~every 1/60s
-  const smallJitter = (rng() - 0.5) * 0.06 * sig.amplitude; // ±6% amp jitter
-  const freqJitter = 1 + (rng() - 0.5) * 0.05;              // ±5% freq jitter
-  const slowDrift = 0.5 * Math.sin(2 * Math.PI * sig.driftSpeed * t + sig.seed) * sig.amplitude * 0.08;
-
-  const base = Math.sin(2 * Math.PI * (sig.frequency * freqJitter) * t + sig.phase)
-             * sig.amplitude
-             + slowDrift
-             + smallJitter;
+  // Generate different base signals based on type
+  let base;
+  
+  if (sig.type === 'breathing1' || sig.type === 'breathing2' || sig.type === 'eda') {
+    // Perfectly smooth signals for breathing and EDA - no jitter, no drift
+    base = Math.sin(2 * Math.PI * sig.frequency * t + sig.phase) * sig.amplitude;
+  } else {
+    // Pulse signal with all the original noise and jitter
+    const rng = mulberry32(Math.floor(t * 60) + sig.seed);
+    const freqJitter = 1 + (rng() - 0.5) * 0.05;
+    const slowDrift = 0.5 * Math.sin(2 * Math.PI * sig.driftSpeed * t + sig.seed) * sig.amplitude * 0.08;
+    const smallJitter = (rng() - 0.5) * 0.06 * sig.amplitude;
+    
+    base = Math.sin(2 * Math.PI * (sig.frequency * freqJitter) * t + sig.phase)
+           * sig.amplitude
+           + slowDrift
+           + smallJitter;
+  }
 
   if (!distortionActive) return base;
 
@@ -51,12 +59,13 @@ function generateSample(sig: SignalData, tMs: number, distortionActive: boolean,
       return base * (1 + E * (ampLift - 1)) + hf * sig.amplitude;
     }
     case 'eda': {
+      // EDA signal - smooth sine wave with tonic rise during distortion
       const tonicRise = 1.2 * E * sig.amplitude;
-      const slower = Math.sin(2 * Math.PI * (sig.frequency * 0.6) * t) * sig.amplitude;
-      return slower + tonicRise + smallJitter;
+      return base + tonicRise;
     }
     case 'breathing1':
     case 'breathing2': {
+      // Breathing signals - smooth sine wave with amplitude drop during distortion
       const ampDrop = 0.55;
       const freqBump = 1.25;
       return Math.sin(2 * Math.PI * (sig.frequency * freqBump) * t + sig.phase)

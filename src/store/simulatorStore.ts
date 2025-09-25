@@ -7,8 +7,8 @@ const now = () => performance.now();
 
 const initialSignals: SignalData[] = [
   { id: 'breathing1', type: 'breathing1', color: '#1e3a8a', amplitude: 0.9, frequency: 0.28, phase: 0, visible: true, seed: 7777, driftSpeed: 0.012 },
-  { id: 'breathing2', type: 'breathing2', color: '#1e40af', amplitude: 0.75, frequency: 0.3, phase: 0, visible: true, seed: 8888, driftSpeed: 0.013 },
-  { id: 'eda', type: 'eda', color: '#16a34a', amplitude: 0.8, frequency: 0.12, phase: 0, visible: true, seed: 4242, driftSpeed: 0.01 },
+  { id: 'breathing2', type: 'breathing2', color: '#1e40af', amplitude: 0.5, frequency: 0.5, phase: 0, visible: true, seed: 8888, driftSpeed: 0.013 },
+  { id: 'eda', type: 'eda', color: '#16a34a', amplitude: 0.3, frequency: 0.12, phase: 0, visible: true, seed: 4242, driftSpeed: 0.01 },
   { id: 'pulse', type: 'pulse', color: '#dc2626', amplitude: 1.0, frequency: 2.2, phase: 0, visible: true, seed: 1337, driftSpeed: 0.015 },
 ];
 
