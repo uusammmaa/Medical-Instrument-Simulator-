@@ -34,8 +34,19 @@ function generateSample(sig: SignalData, tMs: number, distortionActive: boolean,
   if (sig.type === 'breathing1' || sig.type === 'breathing2' || sig.type === 'eda') {
     // Perfectly smooth signals for breathing and EDA - no jitter, no drift
     base = Math.sin(2 * Math.PI * sig.frequency * t + sig.phase) * sig.amplitude;
+  } else if (sig.type === 'pulse') {
+    // Natural BPR signal - clean sine wave with light amplitude variations
+    const rng = mulberry32(Math.floor(t * 60) + sig.seed);
+    // Very light amplitude variation (5% max) for natural BPR feel
+    const amplitudeVariation = 1 + (rng() - 0.5) * 0.05;
+    // Very subtle frequency variation (1% max) to avoid perfect regularity
+    const freqVariation = 1 + (rng() - 0.5) * 0.01;
+    
+    base = Math.sin(2 * Math.PI * (sig.frequency * freqVariation) * t + sig.phase)
+           * sig.amplitude
+           * amplitudeVariation;
   } else {
-    // Pulse signal with all the original noise and jitter
+    // Other signals with original noise and jitter
     const rng = mulberry32(Math.floor(t * 60) + sig.seed);
     const freqJitter = 1 + (rng() - 0.5) * 0.05;
     const slowDrift = 0.5 * Math.sin(2 * Math.PI * sig.driftSpeed * t + sig.seed) * sig.amplitude * 0.08;
@@ -54,9 +65,9 @@ function generateSample(sig: SignalData, tMs: number, distortionActive: boolean,
 
   switch (sig.type) {
     case 'pulse': {
-      const ampLift = 1.8;
-      const hf = 0.02 * Math.sin(2 * Math.PI * 20 * t); // shimmer
-      return base * (1 + E * (ampLift - 1)) + hf * sig.amplitude;
+      // Natural BPR distortion - maintain clean pattern with amplitude increase
+      const ampLift = 1.6; // Slightly reduced for more natural look
+      return base * (1 + E * (ampLift - 1));
     }
     case 'eda': {
       // EDA signal - smooth sine wave with tonic rise during distortion
