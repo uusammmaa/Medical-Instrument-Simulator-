@@ -36,14 +36,15 @@ function generateSample(
   // Generate different base signals based on type
   let base;
 
-  if (
-    sig.type === "breathing1" ||
-    sig.type === "breathing2" ||
-    sig.type === "eda"
-  ) {
-    // Perfectly smooth signals for breathing and EDA - no jitter, no drift
+  if (sig.type === "breathing1" || sig.type === "breathing2") {
+    // Perfectly smooth signals for breathing - no jitter, no drift
     base =
       Math.sin(2 * Math.PI * sig.frequency * t + sig.phase) * sig.amplitude;
+  } else 
+  if (sig.type === "eda") {
+    const amplitude = distortionActive ? sig.amplitude * 2 : sig.amplitude;
+    const frequency = distortionActive ? sig.frequency * 4 : sig.frequency;
+    base = Math.sin(2 * Math.PI * frequency * t + sig.phase) * amplitude;
   } else if (sig.type === "pulse") {
     // Natural BPR signal - clean sine wave with light amplitude variations
     const rng = mulberry32(Math.floor(t * 60) + sig.seed);
@@ -86,9 +87,8 @@ function generateSample(
       return base * (1 + E * (ampLift - 1));
     }
     case "eda": {
-      // EDA signal - smooth sine wave with tonic rise during distortion
-      const tonicRise = 1.2 * E * sig.amplitude;
-      return base + tonicRise;
+      // EDA signal - amplitude already increased in base signal when distortion is active
+      return base;
     }
     case "breathing1":
     case "breathing2": {
