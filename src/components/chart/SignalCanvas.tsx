@@ -92,12 +92,11 @@ function generateSample(
     }
     case "breathing1":
     case "breathing2": {
-      // Breathing signals - smooth sine wave with amplitude drop during distortion
-      const ampDrop = 0.55;
-      const freqBump = 1.25;
+      // Breathing signals - smooth sine wave with frequency increase during distortion
+      const freqBump = 2;
       return (
         Math.sin(2 * Math.PI * (sig.frequency * freqBump) * t + sig.phase) *
-        (sig.amplitude * (1 - E * (1 - ampDrop)))
+        sig.amplitude * 1.5
       );
     }
     default:
