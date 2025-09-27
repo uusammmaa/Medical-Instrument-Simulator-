@@ -19,6 +19,16 @@ export const ColumnOverlay: React.FC<ColumnOverlayProps> = ({ width }) => {
   const currentTime = getCurrentTime();
   const timeScale = width / 60; // 60 seconds window
 
+  // Create a map to track column numbers by type
+  const getColumnNumber = (column: typeof columns[0], allColumns: typeof columns) => {
+    const sameTypeColumns = allColumns
+      .filter(c => c.type === column.type)
+      .sort((a, b) => a.timestamp - b.timestamp); // Sort by creation time
+    
+    const index = sameTypeColumns.findIndex(c => c.id === column.id);
+    return index + 1; // 1-based indexing
+  };
+
   return (
     <div className="absolute inset-0 pointer-events-none">
       {columns.map((column) => {
@@ -29,6 +39,9 @@ export const ColumnOverlay: React.FC<ColumnOverlayProps> = ({ width }) => {
         
         // Only render if column is visible in current time window
         if (x + columnWidth > 0 && x < width) {
+          const columnNumber = getColumnNumber(column, columns);
+          const displayText = column.type === 'green' ? `C${columnNumber}` : `R${columnNumber}`;
+          
           return (
             <motion.div
               key={column.id}
@@ -50,7 +63,7 @@ export const ColumnOverlay: React.FC<ColumnOverlayProps> = ({ width }) => {
               whileTap={{ scale: 0.98 }}
             >
               <div className="absolute top-2 left-2 text-xs font-bold text-white bg-black bg-opacity-50 px-1 rounded">
-                {column.type === 'green' ? 'G' : 'R'}
+                {displayText}
               </div>
             </motion.div>
           );
