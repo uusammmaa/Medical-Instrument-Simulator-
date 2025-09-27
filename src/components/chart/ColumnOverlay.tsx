@@ -25,7 +25,7 @@ export const ColumnOverlay: React.FC<ColumnOverlayProps> = ({ width }) => {
         // Calculate position relative to current time window
         const timeOffset = currentTime - column.x;
         const x = width - (timeOffset * timeScale);
-        const columnWidth = column.width * timeScale;
+        const columnWidth = (column.width * timeScale) * 0.2; // Make columns 50% thinner
         
         // Only render if column is visible in current time window
         if (x + columnWidth > 0 && x < width) {

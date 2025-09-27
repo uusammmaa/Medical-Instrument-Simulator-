@@ -118,20 +118,15 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
   const {
     isPlaying,
     signals,
-    columns,
     buffers,
     pushSample,
     trimBuffers,
     distortionActive,
     distortionStartedAt,
     updateCurrentTime,
-    getCurrentTime,
   } = useSimulatorStore();
 
   // Drawing helpers
-  const timeToX = (t: number, minT: number, maxT: number, w: number) =>
-    ((t - minT) / (maxT - minT)) * w;
-
   const valueToY = (y: number, h: number, row: number, rows: number) => {
     const rowHeight = h / rows;
     const mid = row * rowHeight + rowHeight / 2;
@@ -177,37 +172,6 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     [width, height]
   );
 
-  const drawColumns = useCallback(
-    (ctx: CanvasRenderingContext2D) => {
-      const timeScale = width / 60; // 60 seconds window
-      const currentTime = getCurrentTime();
-
-      columns.forEach((column) => {
-        // Calculate time offset from current time (in seconds)
-        const timeOffset = currentTime - column.x;
-
-        // Only show columns within the 60-second window
-        if (timeOffset >= 0 && timeOffset <= 60) {
-          const x = width - timeOffset * timeScale;
-          const columnWidth = column.width * timeScale;
-
-          if (x + columnWidth > 0 && x < width) {
-            ctx.fillStyle =
-              column.type === "green"
-                ? "rgba(34, 197, 94, 0.3)"
-                : "rgba(239, 68, 68, 0.3)";
-            ctx.fillRect(x, 0, columnWidth, height);
-
-            // Column border
-            ctx.strokeStyle = column.type === "green" ? "#22c55e" : "#ef4444";
-            ctx.lineWidth = 2;
-            ctx.strokeRect(x, 0, columnWidth, height);
-          }
-        }
-      });
-    },
-    [columns, width, height, getCurrentTime]
-  );
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -225,9 +189,6 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     // Draw grid
     drawGrid(ctx);
 
-    // Draw columns
-    drawColumns(ctx);
-
     // Generate and append new samples if playing
     if (isPlaying) {
       const t = performance.now();
@@ -240,9 +201,6 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     }
 
     // Draw signals from buffers - only last 60 seconds
-    const currentTime = getCurrentTime();
-    const windowStart = currentTime - 60; // 60 seconds ago
-    const windowEnd = currentTime;
     const rows = signals.length;
 
     signals.forEach((sig, row) => {
@@ -298,7 +256,6 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     isPlaying,
     updateCurrentTime,
     drawGrid,
-    drawColumns,
   ]);
 
   // Animation loop for continuous signal generation
