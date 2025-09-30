@@ -103,7 +103,15 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
   clearColumns: () => set({ columns: [] }),
 
   // Playback controls
-  play: () => set({ isPlaying: true, startTime: now() }),
+  play: () => {
+    const state = get();
+    if (!state.isPlaying) {
+      // When resuming from pause, adjust startTime to maintain current position
+      const now = performance.now();
+      const elapsed = state.currentTime * 1000; // Convert currentTime (seconds) to milliseconds
+      set({ isPlaying: true, startTime: now - elapsed });
+    }
+  },
   pause: () => set({ isPlaying: false }),
   stop: () =>
     set({

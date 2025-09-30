@@ -180,8 +180,10 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Update current time for continuous animation
-    updateCurrentTime();
+    // Update current time for continuous animation (only when playing)
+    if (isPlaying) {
+      updateCurrentTime();
+    }
 
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
@@ -262,17 +264,34 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
   useEffect(() => {
     const animate = () => {
       draw();
-      animationRef.current = requestAnimationFrame(animate);
+      if (isPlaying) {
+        animationRef.current = requestAnimationFrame(animate);
+      }
     };
 
-    animationRef.current = requestAnimationFrame(animate);
+    if (isPlaying) {
+      animationRef.current = requestAnimationFrame(animate);
+    }
 
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [draw]);
+  }, [draw, isPlaying]);
+
+  // Restart animation when resuming from pause
+  useEffect(() => {
+    if (isPlaying && !animationRef.current) {
+      const animate = () => {
+        draw();
+        if (isPlaying) {
+          animationRef.current = requestAnimationFrame(animate);
+        }
+      };
+      animationRef.current = requestAnimationFrame(animate);
+    }
+  }, [isPlaying, draw]);
 
   const handleContextMenu = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement>) => {
