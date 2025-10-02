@@ -168,7 +168,8 @@ export const useSimulatorStore = create<SimulatorStore>((set, get) => ({
 
   trimBuffers: (windowMs) =>
     set((state) => {
-      const cutoff = now() - windowMs;
+      const currentTime = state.isPlaying ? (now() - state.startTime) / 1000 : state.currentTime;
+      const cutoff = (currentTime * 1000) - windowMs; // Convert to milliseconds
       const next: SimulatorStore["buffers"] = {
         breathing1: [],
         breathing2: [],

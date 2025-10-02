@@ -124,6 +124,7 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     distortionActive,
     distortionStartedAt,
     updateCurrentTime,
+    getCurrentTime,
   } = useSimulatorStore();
 
   // Drawing helpers
@@ -193,10 +194,10 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
 
     // Generate and append new samples if playing
     if (isPlaying) {
-      const t = performance.now();
+      const currentTime = getCurrentTime();
       signals.forEach((sig) => {
-        const y = generateSample(sig, t, distortionActive, distortionStartedAt);
-        pushSample(sig.id, { t, y });
+        const y = generateSample(sig, currentTime * 1000, distortionActive, distortionStartedAt);
+        pushSample(sig.id, { t: currentTime * 1000, y });
       });
       // keep last 60 seconds
       trimBuffers(60_000);
@@ -210,10 +211,14 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
       const arr = buffers[sig.id] ?? [];
       if (arr.length < 2) return;
 
-      // Filter samples to only show last 60 seconds
+      // Filter samples to only show last 60 seconds based on simulator time
+      const currentSimTime = getCurrentTime();
       const windowedSamples = arr.filter(
-        (sample) =>
-          sample.t >= performance.now() - 60000 && sample.t <= performance.now()
+        (sample) => {
+          // Sample timestamp is now in simulator time (milliseconds)
+          const sampleSimTime = sample.t / 1000; // Convert ms to seconds
+          return sampleSimTime >= currentSimTime - 60 && sampleSimTime <= currentSimTime;
+        }
       );
 
       if (windowedSamples.length < 2) return;
@@ -222,7 +227,8 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
       for (let i = 0; i < windowedSamples.length; i++) {
         // Calculate x position: right-to-left scrolling
         // Most recent data (right edge) to oldest data (left edge)
-        const timeFromNow = (performance.now() - windowedSamples[i].t) / 1000; // seconds ago
+        const sampleSimTime = windowedSamples[i].t / 1000; // Convert ms to seconds
+        const timeFromNow = currentSimTime - sampleSimTime; // seconds ago
         const x = width - timeFromNow * (width / 60); // 60 seconds = full width
         const y = valueToY(windowedSamples[i].y, height, row, rows);
         if (i === 0) ctx.moveTo(x, y);
@@ -257,6 +263,7 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     trimBuffers,
     isPlaying,
     updateCurrentTime,
+    getCurrentTime,
     drawGrid,
   ]);
 
