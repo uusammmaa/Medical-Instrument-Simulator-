@@ -142,15 +142,7 @@ export const ChartArea: React.FC = () => {
           </div>
         </div>
         
-        {/* Distortion Indicator */}
-        {distortionActive && (
-          <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-white rounded-full animate-ping"></div>
-              <span className="font-semibold">DISTORTING NEW SIGNALS</span>
-            </div>
-          </div>
-        )}
+        
         
         
         

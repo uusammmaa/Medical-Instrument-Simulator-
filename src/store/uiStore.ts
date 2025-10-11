@@ -31,8 +31,8 @@ const initialTotals: TotalsData = {
 const initialSubject: SubjectInfo = {
   name: 'Trent',
   scoresheet: '<New>',
-  chart: 'Arm, 8/17/2010 11:05:02 AM',
-  examiner: 'Shawn',
+  chart: `Arm, ${new Date().toLocaleString()}`,
+  examiner: 'Dr. Khan',
 };
 
 export const useUIStore = create<UIStore>((set) => ({

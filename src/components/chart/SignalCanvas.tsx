@@ -40,8 +40,7 @@ function generateSample(
     // Perfectly smooth signals for breathing - no jitter, no drift
     base =
       Math.sin(2 * Math.PI * sig.frequency * t + sig.phase) * sig.amplitude;
-  } else 
-  if (sig.type === "eda") {
+  } else if (sig.type === "eda") {
     const amplitude = distortionActive ? sig.amplitude * 2 : sig.amplitude;
     const frequency = distortionActive ? sig.frequency * 4 : sig.frequency;
     base = Math.sin(2 * Math.PI * frequency * t + sig.phase) * amplitude;
@@ -96,7 +95,8 @@ function generateSample(
       const freqBump = 2;
       return (
         Math.sin(2 * Math.PI * (sig.frequency * freqBump) * t + sig.phase) *
-        sig.amplitude * 1.5
+        sig.amplitude *
+        1.5
       );
     }
     default:
@@ -173,7 +173,6 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     [width, height]
   );
 
-
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -195,9 +194,26 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     // Generate and append new samples if playing
     if (isPlaying) {
       const currentTime = getCurrentTime();
+      const t = currentTime * 1000; // Convert to milliseconds for sample generation
+
+      // Convert distortionStartedAt to simulation time if distortion is active
+      let distortionStartSimTime = null;
+      if (distortionActive && distortionStartedAt) {
+        // Convert performance.now() timestamp to simulation time
+        const state = useSimulatorStore.getState();
+        const distortionElapsed =
+          (distortionStartedAt - state.startTime) / 1000; // seconds
+        distortionStartSimTime = distortionElapsed * 1000; // milliseconds in simulation time
+      }
+
       signals.forEach((sig) => {
-        const y = generateSample(sig, currentTime * 1000, distortionActive, distortionStartedAt);
-        pushSample(sig.id, { t: currentTime * 1000, y });
+        const y = generateSample(
+          sig,
+          t,
+          distortionActive,
+          distortionStartSimTime
+        );
+        pushSample(sig.id, { t, y });
       });
       // keep last 60 seconds
       trimBuffers(60_000);
@@ -211,15 +227,15 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
       const arr = buffers[sig.id] ?? [];
       if (arr.length < 2) return;
 
-      // Filter samples to only show last 60 seconds based on simulator time
+      // Filter samples to only show last 60 seconds based on simulation time
       const currentSimTime = getCurrentTime();
-      const windowedSamples = arr.filter(
-        (sample) => {
-          // Sample timestamp is now in simulator time (milliseconds)
-          const sampleSimTime = sample.t / 1000; // Convert ms to seconds
-          return sampleSimTime >= currentSimTime - 60 && sampleSimTime <= currentSimTime;
-        }
-      );
+      const windowedSamples = arr.filter((sample) => {
+        const sampleSimTime = sample.t / 1000; // Convert ms to seconds
+        return (
+          sampleSimTime >= currentSimTime - 60 &&
+          sampleSimTime <= currentSimTime
+        );
+      });
 
       if (windowedSamples.length < 2) return;
 
@@ -244,12 +260,8 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
       ctx.textAlign = "left";
       const rowHeight = height / rows;
       const yOffset = row * rowHeight;
-      let labelText = sig.type.toUpperCase();
+      const labelText = sig.type.toUpperCase();
 
-      if (distortionActive) {
-        labelText += " (DISTORTED)";
-        ctx.fillStyle = "#ff6b6b";
-      }
       ctx.fillText(labelText, 10, yOffset + 20);
     });
   }, [
