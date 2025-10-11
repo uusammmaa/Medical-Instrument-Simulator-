@@ -195,9 +195,20 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
     // Generate and append new samples if playing
     if (isPlaying) {
       const currentTime = getCurrentTime();
+      const t = currentTime * 1000; // Convert to milliseconds for sample generation
+      
+      // Convert distortionStartedAt to simulation time if distortion is active
+      let distortionStartSimTime = null;
+      if (distortionActive && distortionStartedAt) {
+        // Convert performance.now() timestamp to simulation time
+        const state = useSimulatorStore.getState();
+        const distortionElapsed = (distortionStartedAt - state.startTime) / 1000; // seconds
+        distortionStartSimTime = distortionElapsed * 1000; // milliseconds in simulation time
+      }
+      
       signals.forEach((sig) => {
-        const y = generateSample(sig, currentTime * 1000, distortionActive, distortionStartedAt);
-        pushSample(sig.id, { t: currentTime * 1000, y });
+        const y = generateSample(sig, t, distortionActive, distortionStartSimTime);
+        pushSample(sig.id, { t, y });
       });
       // keep last 60 seconds
       trimBuffers(60_000);
@@ -211,11 +222,10 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
       const arr = buffers[sig.id] ?? [];
       if (arr.length < 2) return;
 
-      // Filter samples to only show last 60 seconds based on simulator time
+      // Filter samples to only show last 60 seconds based on simulation time
       const currentSimTime = getCurrentTime();
       const windowedSamples = arr.filter(
         (sample) => {
-          // Sample timestamp is now in simulator time (milliseconds)
           const sampleSimTime = sample.t / 1000; // Convert ms to seconds
           return sampleSimTime >= currentSimTime - 60 && sampleSimTime <= currentSimTime;
         }
