@@ -254,12 +254,12 @@ export const SignalCanvas: React.FC<SignalCanvasProps> = ({
       ctx.textAlign = "left";
       const rowHeight = height / rows;
       const yOffset = row * rowHeight;
-      let labelText = sig.type.toUpperCase();
+      const labelText = sig.type.toUpperCase();
 
-      if (distortionActive) {
-        labelText += " (DISTORTED)";
-        ctx.fillStyle = "#ff6b6b";
-      }
+      // if (distortionActive) {
+      //   labelText += " (DISTORTED)";
+      //   ctx.fillStyle = "#ff6b6b";
+      // }
       ctx.fillText(labelText, 10, yOffset + 20);
     });
   }, [
