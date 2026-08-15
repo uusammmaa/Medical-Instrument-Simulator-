@@ -183,15 +183,6 @@ Modern browsers with ES6+ support required.
 
 The application is currently deployed on Vercel and accessible at:
 - **Production URL**: https://medical-instrument-simulator.vercel.app/
-- **Vercel Dashboard**: https://vercel.com/usamaakram17-gmailcoms-projects/medical-instrument-simulator
-
-### Deployment Configuration
-
-**Project Details:**
-- **Project Name**: medical-instrument-simulator
-- **Organization**: usamaakram17-gmailcoms-projects
-- **Project ID**: prj_mho0DMoV82EugMECOhGVyTrTJNWH
-- **Organization ID**: team_0zdqliqeZI2qSXzN6pGxUiXO
 
 ### Deployment Commands
 
